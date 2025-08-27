@@ -1,0 +1,42 @@
+services:
+  mlflow-server:
+    build: ./mlflow-server
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  training:
+    build: ./training
+    depends_on:
+      mlflow-server:
+        condition: service_healthy
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+    volumes:
+      - ./data:/app/data
+
+  fastapi-app:
+    build: ./fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - MODEL_NAME=video_game_sales_model
+      - MODEL_VERSION=latest
+    volumes:
+      - ./mlflow_data:/mlflow
+    depends_on:
+      mlflow-server:
+        condition: service_healthy
+      training:
+        condition: service_completed_successfully
+
+volumes:
+  mlflow_data:
