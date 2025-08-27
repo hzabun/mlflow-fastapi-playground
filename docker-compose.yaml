@@ -4,7 +4,7 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      - ./mlflow_data:/mlflow
+      - mlflow_data:/mlflow
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 10s
@@ -31,7 +31,7 @@ services:
       - MODEL_NAME=video_game_sales_model
       - MODEL_VERSION=latest
     volumes:
-      - ./mlflow_data:/mlflow
+      - mlflow_data:/mlflow
     depends_on:
       mlflow-server:
         condition: service_healthy
